@@ -1,11 +1,15 @@
 import pytest
 
-# Req3: Support newline delimiter
+# Req3: Support newline delimiter no failure
 
 # Tests for the StringCalculator class
 def test_newline_delimiter():
     calc = StringCalculator()
-    assert calc.add("1\n2,3") == 6  # This will fail initially
+    assert calc.add("1\n2,3") == 6
+
+def test_mixed_delimiters():
+    calc = StringCalculator()
+    assert calc.add("1\n2\n3,4,5\n6") == 21
 
 def test_empty_string():
     calc = StringCalculator()
@@ -41,13 +45,16 @@ class StringCalculator:
         Add numbers provided in a string format.
         
         Args:
-            numbers: String containing numbers separated by comma
+            numbers: String containing numbers separated by comma or newline
             
         Returns:
             Sum of the numbers, with empty or invalid numbers treated as 0
         """
         if not numbers:
             return 0
+            
+        # Replace newlines with commas for consistent splitting
+        numbers = numbers.replace('\n', ',')
             
         # Split numbers by comma
         nums = numbers.split(',')
