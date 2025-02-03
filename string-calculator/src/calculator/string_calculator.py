@@ -1,6 +1,6 @@
 import pytest
 
-# Req1: Basic calculator with 2 number limit
+# Req2: Remove allowable inputs constraint
 
 # Tests for the StringCalculator class
 def test_empty_string():
@@ -23,34 +23,30 @@ def test_invalid_numbers():
     calc = StringCalculator()
     assert calc.add("5,tytyt") == 5
     
-def test_too_many_numbers():
+def test_multiple_numbers():
     calc = StringCalculator()
-    with pytest.raises(ValueError, match="More than 2 numbers provided"):
-        calc.add("1,2,3")
+    assert calc.add("1,2,3,4,5,6,7,8,9,10,11,12") == 78
+
+def test_multiple_numbers_with_invalid():
+    calc = StringCalculator()
+    assert calc.add("1,2,invalid,4,bad,6") == 13
 
 class StringCalculator:
     def add(self, numbers: str) -> int:
         """
-        Add up to two numbers provided in a string format.
+        Add numbers provided in a string format.
         
         Args:
-            numbers: String containing up to two numbers separated by comma
+            numbers: String containing numbers separated by comma
             
         Returns:
             Sum of the numbers, with empty or invalid numbers treated as 0
-            
-        Raises:
-            ValueError: If more than 2 numbers are provided
         """
         if not numbers:
             return 0
             
         # Split numbers by comma
         nums = numbers.split(',')
-        
-        # Check for too many numbers
-        if len(nums) > 2:
-            raise ValueError("More than 2 numbers provided")
             
         # Convert and sum numbers, treating invalid as 0
         total = 0
