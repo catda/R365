@@ -1,8 +1,21 @@
 import pytest
+import re
 
-# Req5: Ignore numbers greater than 1000
+# Req6: Support custom single-character delimiter
 
 # Tests for the StringCalculator class
+def test_custom_single_char_delimiter():
+    calc = StringCalculator()
+    assert calc.add("//#\n2#5") == 7
+
+def test_custom_delimiter_with_invalid():
+    calc = StringCalculator()
+    assert calc.add("//,\n2,ff,100") == 102
+
+def test_custom_delimiter_with_large_numbers():
+    calc = StringCalculator()
+    assert calc.add("//@\n2@1001@5") == 7
+
 def test_numbers_greater_than_1000():
     calc = StringCalculator()
     assert calc.add("2,1001,6") == 8  # 1001 should be ignored
@@ -69,7 +82,8 @@ class StringCalculator:
         Add numbers provided in a string format.
         
         Args:
-            numbers: String containing numbers separated by comma or newline
+            numbers: String containing numbers separated by delimiters
+            Supports default delimiters (comma, newline) and custom delimiter format: //{delimiter}\n{numbers}
             Numbers greater than 1000 are treated as invalid and ignored
             
         Returns:
@@ -80,12 +94,21 @@ class StringCalculator:
         """
         if not numbers:
             return 0
+        
+        # Handle custom delimiter format
+        delimiter = ','
+        if numbers.startswith('//'):
+            # Extract custom delimiter and remaining numbers
+            delimiter_end = numbers.find('\n')
+            if delimiter_end != -1:
+                delimiter = numbers[2:delimiter_end]
+                numbers = numbers[delimiter_end + 1:]
+        
+        # Replace newlines with delimiter for consistent splitting
+        numbers = numbers.replace('\n', delimiter)
             
-        # Replace newlines with commas for consistent splitting
-        numbers = numbers.replace('\n', ',')
-            
-        # Split numbers by comma
-        nums = numbers.split(',')
+        # Split numbers using delimiter
+        nums = numbers.split(delimiter)
         
         # Check for negative numbers
         negative_nums = []
