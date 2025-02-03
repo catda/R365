@@ -1,8 +1,12 @@
 import pytest
 
-# Req2: Remove allowable inputs constraint
+# Req3: Support newline delimiter
 
 # Tests for the StringCalculator class
+def test_newline_delimiter():
+    calc = StringCalculator()
+    assert calc.add("1\n2,3") == 6  # This will fail initially
+
 def test_empty_string():
     calc = StringCalculator()
     assert calc.add("") == 0
