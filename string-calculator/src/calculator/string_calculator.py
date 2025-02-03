@@ -1,8 +1,20 @@
 import pytest
 
-# Req4: Deny negative numbers
+# Req5: Ignore numbers greater than 1000
 
 # Tests for the StringCalculator class
+def test_numbers_greater_than_1000():
+    calc = StringCalculator()
+    assert calc.add("2,1001,6") == 8  # 1001 should be ignored
+
+def test_exactly_1000():
+    calc = StringCalculator()
+    assert calc.add("1000,2") == 1002  # 1000 should be included
+
+def test_mixed_valid_and_invalid_numbers():
+    calc = StringCalculator()
+    assert calc.add("1,2000,3,4000,5") == 9  # 2000 and 4000 should be ignored
+
 def test_negative_numbers_exception():
     calc = StringCalculator()
     with pytest.raises(ValueError, match="Negatives not allowed: \\[-1, -2, -3\\]"):
@@ -58,9 +70,10 @@ class StringCalculator:
         
         Args:
             numbers: String containing numbers separated by comma or newline
+            Numbers greater than 1000 are treated as invalid and ignored
             
         Returns:
-            Sum of the numbers, with empty or invalid numbers treated as 0
+            Sum of the valid numbers, with empty or invalid numbers treated as 0
             
         Raises:
             ValueError: If negative numbers are provided
@@ -87,11 +100,13 @@ class StringCalculator:
         if negative_nums:
             raise ValueError(f"Negatives not allowed: {negative_nums}")
             
-        # Convert and sum numbers, treating invalid as 0
+        # Convert and sum valid numbers (≤ 1000), treating invalid as 0
         total = 0
         for num in nums:
             try:
-                total += int(num)
+                n = int(num)
+                if n <= 1000:  # Only add numbers that are not greater than 1000
+                    total += n
             except ValueError:
                 total += 0
                 
