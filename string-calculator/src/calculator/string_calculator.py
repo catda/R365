@@ -1,9 +1,29 @@
 import pytest
 import re
 
-# Req7: Support custom delimiter of any length
+# Req8: Support multiple delimiters
 
 # Tests for the StringCalculator class
+def test_multiple_custom_delimiters():
+    calc = StringCalculator()
+    assert calc.add("//[*][!!][r9r]\n11r9r22*hh*33!!44") == 110
+
+def test_multiple_delimiters_with_numbers():
+    calc = StringCalculator()
+    assert calc.add("//[1][2][3]\n11122233") == 6
+
+def test_multiple_delimiters_with_special_chars():
+    calc = StringCalculator()
+    assert calc.add("//[@][#][$]\n1@2#3$4") == 10
+
+def test_multiple_delimiters_different_lengths():
+    calc = StringCalculator()
+    assert calc.add("//[**][!!!][^]\n1**2!!!3^4") == 10
+
+def test_multiple_empty_delimiters():
+    calc = StringCalculator()
+    assert calc.add("//[][]\n1,2,3") == 6
+    
 def test_custom_long_delimiter():
     calc = StringCalculator()
     assert calc.add("//[***]\n11***22***33") == 66
@@ -93,35 +113,44 @@ def test_multiple_numbers_with_invalid():
 class StringCalculator:
     """A calculator that performs addition on strings of numbers."""
     
-    def _parse_delimiter(self, numbers: str) -> tuple[str, str]:
+    def _parse_delimiters(self, numbers: str) -> tuple[list[str], str]:
         """
-        Parse the delimiter and return it along with the remaining numbers.
+        Parse delimiters and return them along with the remaining numbers.
         
         Args:
-            numbers: Input string that may contain custom delimiter
+            numbers: Input string that may contain custom delimiters
             
         Returns:
-            Tuple of (delimiter, remaining_numbers)
+            Tuple of (list_of_delimiters, remaining_numbers)
         """
         if not numbers.startswith('//'):
-            return ',', numbers
+            return [','], numbers
             
-        # Extract custom delimiter and remaining numbers
-        numbers = numbers[2:]  # Remove //
+        # Remove // prefix
+        numbers = numbers[2:]
         delimiter_end = numbers.find('\n')
         if delimiter_end == -1:
-            return ',', numbers
+            return [','], numbers
             
         delimiter_part = numbers[:delimiter_end]
         numbers_part = numbers[delimiter_end + 1:]
         
-        # Check if delimiter is wrapped in []
-        if delimiter_part.startswith('[') and delimiter_part.endswith(']'):
-            delimiter = delimiter_part[1:-1]  # Remove [ and ]
+        delimiters = []
+        
+        # Check if we have multiple delimiters
+        if delimiter_part.startswith('['):
+            # Find all bracketed delimiters
+            bracket_delimiters = re.findall(r'\[(.*?)\]', delimiter_part)
+            if bracket_delimiters:
+                delimiters.extend(bracket_delimiters)
+            else:
+                # Empty brackets case
+                delimiters.append(',')
         else:
-            delimiter = delimiter_part
+            # Single delimiter case
+            delimiters.append(delimiter_part)
             
-        return delimiter, numbers_part
+        return delimiters or [','], numbers_part
     
     def add(self, numbers: str) -> int:
         """
@@ -133,6 +162,7 @@ class StringCalculator:
             - Default delimiters (comma, newline)
             - Custom delimiter format: //{delimiter}\n{numbers}
             - Custom delimiter format: //[{delimiter}]\n{numbers}
+            - Multiple delimiters format: //[{delimiter1}][{delimiter2}]...\n{numbers}
             Numbers greater than 1000 are treated as invalid and ignored
             
         Returns:
@@ -144,14 +174,16 @@ class StringCalculator:
         if not numbers:
             return 0
         
-        # Parse delimiter and get remaining numbers
-        delimiter, numbers = self._parse_delimiter(numbers)
+        # Parse delimiters and get remaining numbers
+        delimiters, numbers = self._parse_delimiters(numbers)
         
-        # Replace newlines with delimiter for consistent splitting
-        numbers = numbers.replace('\n', delimiter)
+        # Replace all delimiters and newlines with a common separator
+        processed_numbers = numbers.replace('\n', ',')
+        for delimiter in delimiters:
+            processed_numbers = processed_numbers.replace(delimiter, ',')
             
-        # Split numbers using delimiter
-        nums = numbers.split(delimiter)
+        # Split numbers using common separator
+        nums = processed_numbers.split(',')
         
         # Check for negative numbers
         negative_nums = []
