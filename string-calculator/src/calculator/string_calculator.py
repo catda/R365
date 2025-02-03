@@ -1,8 +1,18 @@
 import pytest
 
-# Req3: Support newline delimiter no failure
+# Req4: Deny negative numbers
 
 # Tests for the StringCalculator class
+def test_negative_numbers_exception():
+    calc = StringCalculator()
+    with pytest.raises(ValueError, match="Negatives not allowed: \\[-1, -2, -3\\]"):
+        calc.add("1,-1,2,-2,3,-3")
+
+def test_single_negative_number_exception():
+    calc = StringCalculator()
+    with pytest.raises(ValueError, match="Negatives not allowed: \\[-5\\]"):
+        calc.add("-5")
+
 def test_newline_delimiter():
     calc = StringCalculator()
     assert calc.add("1\n2,3") == 6
@@ -40,6 +50,8 @@ def test_multiple_numbers_with_invalid():
     assert calc.add("1,2,invalid,4,bad,6") == 13
 
 class StringCalculator:
+    """A calculator that performs addition on strings of numbers."""
+    
     def add(self, numbers: str) -> int:
         """
         Add numbers provided in a string format.
@@ -49,6 +61,9 @@ class StringCalculator:
             
         Returns:
             Sum of the numbers, with empty or invalid numbers treated as 0
+            
+        Raises:
+            ValueError: If negative numbers are provided
         """
         if not numbers:
             return 0
@@ -58,6 +73,19 @@ class StringCalculator:
             
         # Split numbers by comma
         nums = numbers.split(',')
+        
+        # Check for negative numbers
+        negative_nums = []
+        for num in nums:
+            try:
+                n = int(num)
+                if n < 0:
+                    negative_nums.append(n)
+            except ValueError:
+                continue
+                
+        if negative_nums:
+            raise ValueError(f"Negatives not allowed: {negative_nums}")
             
         # Convert and sum numbers, treating invalid as 0
         total = 0
