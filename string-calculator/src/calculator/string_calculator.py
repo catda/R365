@@ -1,9 +1,25 @@
 import pytest
 import re
 
-# Req6: Support custom single-character delimiter
+# Req7: Support custom delimiter of any length
 
 # Tests for the StringCalculator class
+def test_custom_long_delimiter():
+    calc = StringCalculator()
+    assert calc.add("//[***]\n11***22***33") == 66
+
+def test_custom_long_delimiter_with_special_chars():
+    calc = StringCalculator()
+    assert calc.add("//[@@##]\n1@@##2@@##3") == 6
+
+def test_custom_long_delimiter_with_numbers():
+    calc = StringCalculator()
+    assert calc.add("//[123]\n1123212323") == 6
+
+def test_empty_long_delimiter():
+    calc = StringCalculator()
+    assert calc.add("//[]\n1,2,3") == 6
+    
 def test_custom_single_char_delimiter():
     calc = StringCalculator()
     assert calc.add("//#\n2#5") == 7
@@ -77,13 +93,46 @@ def test_multiple_numbers_with_invalid():
 class StringCalculator:
     """A calculator that performs addition on strings of numbers."""
     
+    def _parse_delimiter(self, numbers: str) -> tuple[str, str]:
+        """
+        Parse the delimiter and return it along with the remaining numbers.
+        
+        Args:
+            numbers: Input string that may contain custom delimiter
+            
+        Returns:
+            Tuple of (delimiter, remaining_numbers)
+        """
+        if not numbers.startswith('//'):
+            return ',', numbers
+            
+        # Extract custom delimiter and remaining numbers
+        numbers = numbers[2:]  # Remove //
+        delimiter_end = numbers.find('\n')
+        if delimiter_end == -1:
+            return ',', numbers
+            
+        delimiter_part = numbers[:delimiter_end]
+        numbers_part = numbers[delimiter_end + 1:]
+        
+        # Check if delimiter is wrapped in []
+        if delimiter_part.startswith('[') and delimiter_part.endswith(']'):
+            delimiter = delimiter_part[1:-1]  # Remove [ and ]
+        else:
+            delimiter = delimiter_part
+            
+        return delimiter, numbers_part
+    
     def add(self, numbers: str) -> int:
         """
         Add numbers provided in a string format.
         
         Args:
             numbers: String containing numbers separated by delimiters
-            Supports default delimiters (comma, newline) and custom delimiter format: //{delimiter}\n{numbers}
+            Supports:
+            - Default delimiters (comma, newline)
+            - Custom delimiter format: //{delimiter}\n{numbers}
+            - Custom delimiter format: //[{delimiter}]\n{numbers}
             Numbers greater than 1000 are treated as invalid and ignored
             
         Returns:
@@ -95,14 +144,8 @@ class StringCalculator:
         if not numbers:
             return 0
         
-        # Handle custom delimiter format
-        delimiter = ','
-        if numbers.startswith('//'):
-            # Extract custom delimiter and remaining numbers
-            delimiter_end = numbers.find('\n')
-            if delimiter_end != -1:
-                delimiter = numbers[2:delimiter_end]
-                numbers = numbers[delimiter_end + 1:]
+        # Parse delimiter and get remaining numbers
+        delimiter, numbers = self._parse_delimiter(numbers)
         
         # Replace newlines with delimiter for consistent splitting
         numbers = numbers.replace('\n', delimiter)
@@ -134,4 +177,3 @@ class StringCalculator:
                 total += 0
                 
         return total
-
